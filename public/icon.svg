@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="lumenL" x1="0" y1="0" x2="0.15" y2="1">
+      <stop offset="0" stop-color="#d0a6f7"/>
+      <stop offset="0.48" stop-color="#ab6bef"/>
+      <stop offset="1" stop-color="#9150dc"/>
+    </linearGradient>
+    <filter id="lumenShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#6d3bb5" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="147" fill="#ffffff"/>
+  <g transform="translate(256 256) scale(1.164) translate(-256 -256)">
+    <path d="M182 110h56a14 14 0 0 1 14 14v180a14 14 0 0 0 14 14h84a14 14 0 0 1 14 14v56a14 14 0 0 1-14 14H182a14 14 0 0 1-14-14V124a14 14 0 0 1 14-14z"
+          fill="url(#lumenL)" stroke="#8a4ad6" stroke-width="2" filter="url(#lumenShadow)"/>
+  </g>
+</svg>

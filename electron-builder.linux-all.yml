@@ -1,0 +1,133 @@
+# Lumen Notes 0.1.0 - Linux 全格式打包配置 (AppImage + deb + rpm)
+#
+# 配套脚本: ./build-linux-all.sh
+# 脚本会在运行时按本机工具情况改写 linux.target 并生成一份临时配置，
+# 本文件本身保持可读、可作为默认参考，不被修改。
+#
+# 其它配置:
+#   electron-builder.yml         Windows NSIS 打包配置（npm run dist:win）
+#   electron-builder.linux.yml   Linux 手动直打配置（等效于本文件）
+
+appId: com.lumennotes.desktop
+productName: Lumen Notes
+copyright: Copyright © 2026
+
+directories:
+  output: release-linux
+  buildResources: electron
+
+# 必须为 false: forked 同步服务、express.static(dist)、chokidar 监视都按
+# 真实文件系统路径工作；早期把 dist/ 埋进只读 app.asar 会导致启动失败。
+asar: false
+
+# dist/ 在 .gitignore 中，必须显式列回。
+# 生产依赖 (express/ws/react/...) 由 electron-builder 自动收集，
+# 不要写 node_modules/**/*，否则 vite/typescript/electron 等开发依赖会被一起打进去。
+files:
+  - package.json
+  - dist/**/*
+  - electron/**/*
+  - server/**/*
+
+linux:
+  target:
+    - AppImage
+    - deb
+    - rpm
+  category: Utility
+  # 与 package.json 的 homepage 一致：.invalid 是 RFC 2606 保留的不可解析
+  # 域名，明确表示「尚未设置官网」，不会像 example.com 那样被误认成真实站点。
+  maintainer: Lumen Notes <noreply@lumen-notes.invalid>
+  synopsis: Local-first Markdown notes editor
+  description: >
+    Lumen Notes is a local-first Markdown editor with vault sync,
+    timeline history and side-by-side conflict resolution.
+  mimeTypes:
+    - text/markdown
+  artifactName: LumenNotes-${version}-linux-${arch}.${ext}
+  # Electron 33 把 package.json 的 desktopName 当作 Wayland app_id / X11 WM_CLASS。
+  # 不设置时 StartupWMClass 会写成 "Lumen Notes"，与窗口实际的 lumen-notes 不匹配，
+  # GNOME/KDE 的任务栏无法把窗口关联到 .desktop（图标变齿轮、dock 分组错乱）。
+  syncDesktopName: true
+
+appImage:
+  artifactName: LumenNotes-${version}-linux-${arch}.AppImage
+  # electron-builder 26 默认把 --no-sandbox 写进 AppImage 的 .desktop
+  # (AppImageTarget.js 的 defaultArgs)，无条件关掉 Chromium 沙箱。置空
+  # executableArgs 即可去掉：新版 AppRun 会先用 `unshare -Ur true` 探测，
+  # 只有系统确实不支持用户命名空间时才自动补 --no-sandbox，既保留沙箱
+  # 又不会让 AppImage 启动失败。AppImage 的 Exec 固定带 %U (file:// URL)。
+  executableArgs: []
+
+deb:
+  artifactName: LumenNotes-${version}-linux-${arch}.deb
+  packageCategory: utils
+  priority: optional
+  # %F 传本地路径列表。注意：executableArgs 只放在各 target 里，不放 linux 下
+  # ——否则 deepAssign 不会让 appImage 的空数组覆盖它，AppImage 的 Exec
+  # 会变成 "AppRun %F %U"（.desktop 规范不允许两个文件参数码）。
+  executableArgs:
+    - '%F'
+  # electron-builder 26 默认只声明 9 个包；对打包后的二进制跑 ldd 可见它还
+  # 链接了 libgbm/libasound/libatk/libcups/libdrm/libxkbcommon 等，最小化安装的
+  # 系统可能缺库导致启动即失败。Ubuntu 24.04 把一批库改名成 *t64（旧包名由
+  # Provides 虚拟提供），用 "A | B" 同时兼容新旧发行版。
+  depends:
+    - 'libgtk-3-0 | libgtk-3-0t64'
+    - libnotify4
+    - libnss3
+    - libnspr4
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - 'libatspi2.0-0 | libatspi2.0-0t64'
+    - 'libatk1.0-0 | libatk1.0-0t64'
+    - libuuid1
+    - libsecret-1-0
+    - libgbm1
+    - libdrm2
+    - 'libasound2 | libasound2t64'
+    - 'libcups2 | libcups2t64'
+    - libxkbcommon0
+    - libxcomposite1
+    - libxdamage1
+    - libxfixes3
+    - libxrandr2
+    - libpango-1.0-0
+    - libcairo2
+    - libdbus-1-3
+
+rpm:
+  artifactName: LumenNotes-${version}-linux-${arch}.rpm
+  compression: xz
+  packageCategory: Applications/Utility
+  executableArgs:
+    - '%F'
+  # FpmTarget.getDefaultDepends('rpm') 只有 8 项 Fedora 名，缺 ldd 实际链接
+  # 的 libgbm / alsa / cups / libxkbcommon 等。这里显式列出默认项 + 补充项，
+  # 用 "(A or B)" rich dependency 同时兼容 Fedora/RHEL 与 openSUSE 的命名。
+  # 一旦写了 depends 就会完全替换默认值，所以默认 8 项必须一并保留。
+  depends:
+    - gtk3
+    - libnotify
+    - nss
+    - nspr
+    - libXScrnSaver
+    - '(libXtst or libXtst6)'
+    - xdg-utils
+    - at-spi2-core
+    - atk
+    - '(libuuid or libuuid1)'
+    - libsecret
+    - '(mesa-libgbm or libgbm1)'
+    - '(libdrm or libdrm2)'
+    - '(alsa-lib or libasound2)'
+    - '(cups-libs or libcups2)'
+    - '(libxkbcommon or libxkbcommon0)'
+    - '(libXcomposite or libxcomposite1)'
+    - '(libXdamage or libxdamage1)'
+    - '(libXfixes or libxfixes3)'
+    - '(libXrandr or libXrandr2)'
+    - '(pango or libpango-1.0-0)'
+    - '(cairo or libcairo2)'
+    - '(dbus-libs or libdbus-1-3)'

@@ -1,0 +1,56 @@
+# Lumen Notes · electron-builder 配置
+# 桌面壳入口为 package.json 的 "main": electron/main.cjs
+# 同步服务由 main.cjs 通过 fork(server/index.mjs, ELECTRON_RUN_AS_NODE=1) 拉起。
+#
+# 本文件只负责 Windows x64（NSIS）。
+# Linux 目标（deb / rpm / AppImage）请用独立配置与脚本：
+#   npm run dist:linux     → bash build-linux-all.sh
+#   或 npx electron-builder --linux --x64 --config electron-builder.linux.yml
+# Linux 段已移到 electron-builder.linux.yml，不要在本文件里恢复它——
+# 本文件是 npm run dist / dist:win 的默认配置，混进 Linux 目标会让 Windows
+# 构建也尝试拉 fpm / mksquashfs 而失败。
+
+appId: com.lumennotes.desktop
+productName: Lumen Notes
+copyright: Copyright © 2026
+
+directories:
+  # Use a clean output folder. Reusing an older one makes electron-builder
+  # bulk-delete win-unpacked/ (blocked by the environment's delete guard), and
+  # a leftover default_app.asar there is held open by another process.
+  output: release-win-v5
+  buildResources: electron
+
+# 关闭 asar：resources/app/ 是真实目录，fork 出的 Node 服务、express.static(dist)、
+# chokidar 监视全部按普通文件系统路径工作。早期版本把配置和 dist 埋进只读的
+# app.asar，导致写入 .lumen-config.json 报 ENOENT、启动失败。
+# 用户状态（配置、默认仓库、窗口状态）一律存在 app.getPath('userData')，
+# 不落在安装目录里，因此 Program Files 只读和升级覆盖都不会影响。
+asar: false
+
+# 显式列出要打进包的项目文件。dist/ 在 .gitignore 中，必须显式列回，
+# 否则会被默认忽略规则排除。
+files:
+  - package.json
+  - dist/**/*
+  - electron/**/*
+  - server/**/*
+
+win:
+  target: nsis
+  artifactName: LumenNotes-${version}-setup.${ext}
+
+nsis:
+  # Drops the legacy app.asar left by in-place upgrades (Electron loads the
+  # archive before resources/app, which would resurrect the old broken build).
+  include: electron/installer.nsh
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+# ---- Linux 目标已拆分到 electron-builder.linux.yml ----
+# 这里的注释块仅作历史说明，不要再取消注释；Linux 打包走：
+#   npm run dist:linux
+# 脚本会自动设置国内镜像、隔离 rpm 工具链并生成临时配置。

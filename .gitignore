@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+server/vault/.trash/
+.lumen-history/
+.lumen-config.json
+.shot-*.png
+.smoke-*
+.lumen-logs/
+reports/
+LumenNotes-诊断报告-*.md
+
+# 发布产物与安装包（体积大、可再构建，不入库）
+release-*/
+
+# 本机工作区数据（含内部记录与本机配置）
+.workbuddy/
+
+# 临时预览截图
+preview-*.png

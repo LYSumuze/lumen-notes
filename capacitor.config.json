@@ -1,0 +1,14 @@
+{
+  "appId": "com.lumennotes.mobile",
+  "appName": "Lumen Notes",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false,
+    "adjustMarginsForEdgeToEdge": "force"
+  }
+}

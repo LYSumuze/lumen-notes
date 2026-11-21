@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Status bar sits above the WebView because Capacitor's
+         adjustMarginsForEdgeToEdge="force" insets the WebView by the system
+         bars. Give it an opaque light background matching the light app bar
+         (bg-primary / theme-color = #ffffff) so the dark icons remain
+         visible. Do not reuse colorPrimaryDark: it is a dark blue from the
+         Capacitor template and would fight the light shell. -->
+    <color name="lumen_status_bar">#FFFFFFFF</color>
+</resources>

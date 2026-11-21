@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="description" content="Lumen Notes · 本地优先的 Markdown 编辑器" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <title>Lumen Notes</title>
+    <script>
+      /* Apply the theme before first paint. Light is the default; an explicit
+         dark choice or the OS dark setting (follow-system mode) is honoured. */
+      (function () {
+        var t = 'light'
+        try {
+          var s = JSON.parse(localStorage.getItem('lumen.settings') || '{}')
+          if (s && s.themeMode === 'system') {
+            t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          } else if (s && s.theme === 'dark') t = 'dark'
+        } catch (e) { /* private mode / corrupt value -> light */ }
+        document.documentElement.dataset.theme = t
+        var meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', t === 'dark' ? '#1e1e1e' : '#ffffff')
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
